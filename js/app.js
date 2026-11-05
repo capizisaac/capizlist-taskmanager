@@ -127,32 +127,39 @@ function renderTasks() {
     } else {
         // Generar el HTML para cada tarea en el panel central
         tasks.forEach(task => {
-            const taskCard = document.createElement('div');
-            taskCard.className = `task-card ${task.completed ? 'completed' : ''}`;
-            taskCard.dataset.id = task.id;
+    const taskCard = document.createElement('div');
+    
+    // Normalizamos categoría y prioridad para que el CSS las reconozca sin fallar
+    let categoriaLimpia = task.category ? task.category.toLowerCase().trim()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") : 'personal';
+    
+    const categoriaClase = `categoria-${categoriaLimpia}`;
+    const prioridadClase = `prioridad-${task.priority.toLowerCase().trim()}`;
+    
+    taskCard.className = `task-card ${categoriaClase} ${prioridadClase} ${task.completed ? 'completed' : ''}`;
+    taskCard.dataset.id = task.id;
 
-            taskCard.innerHTML = `
-                <div class="task-info">
-                    <span class="task-badge ${task.priority.toLowerCase()}">${task.priority}</span>
-                    <span class="task-category-tag" style="font-size: 0.75rem; color: var(--accent-gold);">${task.category}</span>
-                    <h3 class="${task.completed ? 'strike' : ''}">${escapeHTML(task.title)}</h3>
-                    <small>📅 Vence: ${task.dueDate}</small>
-                </div>
-                <div class="task-actions">
-                    <button class="btn-toggle" title="${task.completed ? 'Marcar pendiente' : 'Completar'}">
-                        ${task.completed ? '↩️' : '✅'}
-                    </button>
-                    <button class="btn-delete" title="Eliminar tarea">🗑️</button>
-                </div>
-            `;
-            tasksContainer.appendChild(taskCard);
-        });
+    taskCard.innerHTML = `
+        <div class="task-info">
+            <h3>${escapeHTML(task.title)}</h3>
+            <small>📅 Vence: ${task.dueDate}</small>
+        </div>
+        <div class="task-actions">
+            <button class="btn-toggle" title="${task.completed ? 'Marcar pendiente' : 'Completar'}">
+                ${task.completed ? '↩️' : '✅'}
+            </button>
+            <button class="btn-delete" title="Eliminar tarea">🗑️</button>
+        </div>
+    `;
+    tasksContainer.appendChild(taskCard);
+});
     }
 
     // 🚨 AQUÍ ES CLAVE: Llamamos al radar cada vez que se renderiza para que se actualice
     renderUrgencyRadar();
 }
 
+let tasks = storageService.getTasks();
     // Generar el HTML para cada tarea
     tasks.forEach(task => {
         const taskCard = document.createElement('div');

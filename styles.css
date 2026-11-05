@@ -7,8 +7,14 @@
     --text-main: #ffffff;
     --text-muted: #94a3b8;
     --border-color: #2e2640;
-}
 
+    /* Nuevos colores pastel para categorías guardados en variables del root */
+    --cat-universidad: rgba(56, 189, 248, 0.15); /* Celeste pastel */
+    --cat-trabajo: rgba(99, 102, 241, 0.18);    /* Azul índigo pastel */
+    --cat-gym: rgba(236, 72, 153, 0.15);         /* Rosa pastel */
+    --cat-personal: rgba(168, 85, 247, 0.15);    /* Morado pastel */
+    --cat-casa: rgba(251, 191, 36, 0.12);        /* Beige arena pastel */
+}
 * {
     box-sizing: border-box;
     margin: 0;
@@ -192,4 +198,103 @@ body {
     gap: 0.6rem;
     overflow-y: auto;
     flex: 1;
+}
+
+/* ==========================================
+   Tarjetas de Tareas (Cajas con Categorías y Prioridades)
+   ========================================== */
+
+.task-card {
+    background: #18181b; /* Base por defecto */
+    border: 3px solid var(--border-color); /* Filo grueso indicador de prioridad */
+    border-radius: 10px;
+    padding: 1.2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.task-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+}
+
+.task-card.categoria-universidad { background: var(--cat-universidad); }
+.task-card.categoria-trabajo { background: var(--cat-trabajo); }
+.task-card.categoria-gym { background: var(--cat-gym); }
+.task-card.categoria-personal { background: var(--cat-personal); }
+.task-card.categoria-casa { background: var(--cat-casa); }
+
+/* Filos (bordes) según prioridad */
+.task-card.prioridad-alta {
+    border-color: #ef4444; /* Rojo crítico */
+}
+
+.task-card.prioridad-media {
+    border-color: #fbbf24; /* Dorado / Amarillo de alerta */
+}
+
+.task-card.prioridad-baja {
+    border-color: #22c55e; /* Verde */
+}
+
+/* Estado completado (desvanecido) */
+.task-card.completed {
+    opacity: 0.4;
+    filter: grayscale(0.5);
+}
+
+/* Información de la tarea y jerarquía tipográfica destacada */
+.task-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.task-info h3 {
+    font-size: 1.25rem; /* Título en grande */
+    color: var(--text-main);
+    font-weight: 700;
+    margin: 0;
+    transition: text-decoration 0.2s ease;
+}
+
+.task-card.completed .task-info h3 {
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+    text-decoration-color: var(--text-main);
+}
+
+/* Fecha de vencimiento resaltada y en tamaño destacado */
+.task-info small {
+    font-size: 0.95rem; /* Fecha más grande y visible */
+    color: var(--accent-gold); /* Color dorado para destacar sobre el fondo */
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* Botones de acción grandes y cómodos */
+.task-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.task-actions button {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.6rem 0.9rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.2rem; /* Botones más grandes */
+    transition: background 0.2s, transform 0.1s;
+}
+
+.task-actions button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.08);
 }
