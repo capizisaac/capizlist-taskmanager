@@ -100,7 +100,6 @@ function initEventListeners() {
     }
 }
 
-// Función principal para renderizar las tareas en pantalla
 function renderTasks() {
     let tasks = storageService.getTasks();
 
@@ -116,7 +115,7 @@ function renderTasks() {
         tasks = tasks.filter(t => t.completed);
     }
 
-    // Limpiar contenedor actual
+    // Limpiar contenedor actual del panel central
     tasksContainer.innerHTML = '';
 
     if (tasks.length === 0) {
@@ -125,8 +124,34 @@ function renderTasks() {
                 No hay tareas registradas.
             </div>
         `;
-        return;
+    } else {
+        // Generar el HTML para cada tarea en el panel central
+        tasks.forEach(task => {
+            const taskCard = document.createElement('div');
+            taskCard.className = `task-card ${task.completed ? 'completed' : ''}`;
+            taskCard.dataset.id = task.id;
+
+            taskCard.innerHTML = `
+                <div class="task-info">
+                    <span class="task-badge ${task.priority.toLowerCase()}">${task.priority}</span>
+                    <span class="task-category-tag" style="font-size: 0.75rem; color: var(--accent-gold);">${task.category}</span>
+                    <h3 class="${task.completed ? 'strike' : ''}">${escapeHTML(task.title)}</h3>
+                    <small>📅 Vence: ${task.dueDate}</small>
+                </div>
+                <div class="task-actions">
+                    <button class="btn-toggle" title="${task.completed ? 'Marcar pendiente' : 'Completar'}">
+                        ${task.completed ? '↩️' : '✅'}
+                    </button>
+                    <button class="btn-delete" title="Eliminar tarea">🗑️</button>
+                </div>
+            `;
+            tasksContainer.appendChild(taskCard);
+        });
     }
+
+    // 🚨 AQUÍ ES CLAVE: Llamamos al radar cada vez que se renderiza para que se actualice
+    renderUrgencyRadar();
+}
 
     // Generar el HTML para cada tarea
     tasks.forEach(task => {
@@ -150,11 +175,80 @@ function renderTasks() {
         `;
         tasksContainer.appendChild(taskCard);
     });
-}
+
 
 // Función auxiliar para seguridad (evitar inyección HTML básica)
 function escapeHTML(str) {
     return str.replace(/[&<>'"]/g, 
         tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
     );
+}
+
+// Función para renderizar el Radar con escalamiento automático de prioridad
+function renderUrgencyRadar() {
+    const urgencyContainer = document.getElementById('urgency-radar-content');
+    if (!urgencyContainer) return;
+
+    let tasks = storageService.getTasks();
+
+    // Obtener la fecha actual normalizada a las 00:00 para comparar días exactos
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Filtrar y evaluar el escalamiento dinámico
+    const urgentTasks = tasks.filter(t => {
+        if (t.completed) return false; // Las completadas no van al radar
+
+        const dueDate = new Date(t.dueDate + 'T00:00:00'); // Evitar problemas de zona horaria
+        const diffTime = dueDate - today;
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); // Días restantes
+
+        const basePriority = t.priority.toLowerCase();
+
+        // Reglas de escalamiento automático a Alta:
+        const isAlreadyHigh = basePriority === 'alta';
+        const isLowDueToday = basePriority === 'baja' && diffDays <= 0; // Vence hoy o ya pasó
+        const isMediumDueTomorrowOrLess = basePriority === 'media' && diffDays <= 1; // Vence mañana o ya pasó
+        const isOverdue = diffDays < 0; // Cualquier tarea vencida
+
+        return isAlreadyHigh || isLowDueToday || isMediumDueTomorrowOrLess || isOverdue;
+    });
+
+    urgencyContainer.innerHTML = '';
+
+    if (urgentTasks.length === 0) {
+        urgencyContainer.innerHTML = `
+            <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 1rem;">
+                No hay alertas críticas. ¡Todo bajo control! 🚀
+            </div>
+        `;
+        return;
+    }
+
+    urgentTasks.forEach(task => {
+        const dueDate = new Date(task.dueDate + 'T00:00:00');
+        const diffDays = Math.round((dueDate - today) / (1000 * 60 * 60 * 24));
+
+        let badgeText = '⚠️ URGENTE';
+        if (diffDays < 0) {
+            badgeText = '🔥 VENCIDA';
+        } else if (diffDays === 0) {
+            badgeText = '⏰ VENCE HOY';
+        } else if (diffDays === 1) {
+            badgeText = '⚡ VENCE MAÑANA (MEDIA)';
+        }
+
+        const radarCard = document.createElement('div');
+        radarCard.className = 'task-card';
+        radarCard.style.borderColor = '#7f1d1d'; // Borde rojo de alerta
+
+        radarCard.innerHTML = `
+            <div class="task-info">
+                <span class="task-badge alta">${badgeText}</span>
+                <h3 style="font-size: 0.85rem;">${escapeHTML(task.title)}</h3>
+                <small>📅 Vence: ${task.dueDate}</small>
+            </div>
+        `;
+        urgencyContainer.appendChild(radarCard);
+    });
 }
